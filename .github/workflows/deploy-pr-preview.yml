@@ -1,0 +1,56 @@
+name: Deploy PR Preview to EC2
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+
+    env:
+      BUILD_DIR: dist
+      REMOTE_ROOT: /usr/share/nginx/html
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build preview (set Vite base path)
+        run: |
+          PR_DIR=pr-${{ github.event.pull_request.number }}
+          npm ci
+          npm run build -- --base=/$PR_DIR/
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload preview to EC2
+        run: |
+          PR_DIR=pr-${{ github.event.pull_request.number }}
+          rsync -az --delete "${{ env.BUILD_DIR }}/" \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/$PR_DIR/
+
+      - name: Activate preview on EC2
+        run: |
+          PR_DIR=pr-${{ github.event.pull_request.number }}
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            sudo mkdir -p ${{ env.REMOTE_ROOT }}/$PR_DIR
+            sudo rm -rf ${{ env.REMOTE_ROOT }}/$PR_DIR/*
+            sudo cp -r /tmp/$PR_DIR/* ${{ env.REMOTE_ROOT }}/$PR_DIR/
+            sudo nginx -t
+            sudo systemctl reload nginx
+          EOF
+
+      - name: Print preview URL
+        run: |
+          echo "Preview URL: http://${{ secrets.EC2_HOST }}/pr-${{ github.event.pull_request.number }}/"
