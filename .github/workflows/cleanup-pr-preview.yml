@@ -1,0 +1,29 @@
+name: Cleanup PR Preview on EC2
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    env:
+      REMOTE_ROOT: /usr/share/nginx/html
+
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Remove preview folder
+        run: |
+          PR_DIR=pr-${{ github.event.pull_request.number }}
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            set -e
+            sudo rm -rf ${{ env.REMOTE_ROOT }}/$PR_DIR
+            sudo systemctl reload nginx || true
+          EOF

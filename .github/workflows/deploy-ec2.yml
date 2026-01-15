@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BUILD_DIR: dist  # change to "build" if you use Create React App
+      BUILD_DIR: dist 
       REMOTE_WEB_ROOT: /usr/share/nginx/html
       REMOTE_TMP: /tmp/react-deploy
 
