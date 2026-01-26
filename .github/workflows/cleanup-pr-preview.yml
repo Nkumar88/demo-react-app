@@ -12,6 +12,12 @@ jobs:
       REMOTE_ROOT: /usr/share/nginx/html
 
     steps:
+      - uses: ./.github/actions/push-to-elastic
+        if: always()
+        with:
+          elastic_url: "http://localhost:9200"
+          index: "github-pipeline-events"
+          
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh

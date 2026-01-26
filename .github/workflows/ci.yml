@@ -17,6 +17,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      
+      - uses: ./.github/actions/push-to-elastic
+        if: always()
+        with:
+          elastic_url: "http://localhost:9200"
+          index: "github-pipeline-events"
+
 
       - run: npm ci
       - run: npm run build
