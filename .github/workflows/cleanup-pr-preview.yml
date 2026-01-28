@@ -12,14 +12,6 @@ jobs:
       REMOTE_ROOT: /usr/share/nginx/html
 
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: ./.github/actions/push-to-elastic
-        if: always()
-        with:
-          elastic_url: "http://localhost:9200"
-          index: "github-pipeline-events"
-          
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -35,3 +27,11 @@ jobs:
             sudo rm -rf ${{ env.REMOTE_ROOT }}/$PR_DIR
             sudo systemctl reload nginx || true
           EOF
+
+      - uses: actions/checkout@v4
+      
+      - uses: ./.github/actions/push-to-elastic
+        if: always()
+        with:
+          elastic_url: "http://localhost:9200"
+          index: "github-pipeline-events"
