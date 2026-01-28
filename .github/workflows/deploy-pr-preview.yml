@@ -20,12 +20,6 @@ jobs:
           node-version: 20
           cache: npm
 
-      - uses: ./.github/actions/push-to-elastic
-        if: always()
-        with:
-          elastic_url: "http://localhost:9200"
-          index: "github-pipeline-events"
-
       - name: Build preview (set Vite base path)
         run: |
           PR_DIR=pr-${{ github.event.pull_request.number }}
@@ -60,3 +54,9 @@ jobs:
       - name: Print preview URL
         run: |
           echo "Preview URL: http://${{ secrets.EC2_HOST }}/pr-${{ github.event.pull_request.number }}/"
+
+      - uses: ./.github/actions/push-to-elastic
+        if: always()
+        with:
+          elastic_url: "http://localhost:9200"
+          index: "github-pipeline-events"
