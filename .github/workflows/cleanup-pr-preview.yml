@@ -6,12 +6,14 @@ on:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     env:
       REMOTE_ROOT: /usr/share/nginx/html
 
     steps:
+      - uses: actions/checkout@v4
+      
       - uses: ./.github/actions/push-to-elastic
         if: always()
         with:
