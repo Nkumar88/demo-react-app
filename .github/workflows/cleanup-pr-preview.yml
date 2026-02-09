@@ -6,7 +6,7 @@ on:
 
 jobs:
   cleanup:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     env:
       REMOTE_ROOT: /usr/share/nginx/html
@@ -29,7 +29,7 @@ jobs:
           EOF
 
       - uses: actions/checkout@v4
-      
+
       - uses: ./.github/actions/push-to-elastic
         if: always()
         with:
